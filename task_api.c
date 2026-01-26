@@ -204,7 +204,12 @@ int change_description(TaskList *task_list){
             printf("Не удалось установить новое описание\n");
             return 0;
         }
-        task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[find_index]->description));
+        if(MAX(task_list->max_description_len, strlen(task_list->task[find_index]->description))>50){
+            task_list->max_description_len = 50;
+        }else{
+            task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[find_index]->description));
+        }
+
         return 1;
     }else{
         printf("Не найдена задача с таким Id\n");
@@ -265,7 +270,11 @@ int append_task(TaskList *task_list){
     set_output_priority(task_list, task_list->count);
     set_output_status(task_list, task_list->count);
     task_list->max_title_len = MAX(task_list->max_title_len, strlen(task_list->task[task_list->count]->title));
-    task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description));
+    if(MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description))>50){
+            task_list->max_description_len = 50;
+        }else{
+            task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description));
+        }
     task_list->count++;
     printf("Задача успешно добавлена!\n");
     return 1;
