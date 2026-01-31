@@ -1,2 +1,2 @@
 all:
-	gcc dynamic_string.c print_functions.c task_api.c tasks.c todo.c -o todo
+	gcc ./src/dynamic_string.c ./src/print_functions.c ./src/task_api.c ./src/tasks.c ./src/todo.c -o ./build/todo
