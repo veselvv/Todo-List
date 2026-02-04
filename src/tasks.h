@@ -18,13 +18,11 @@ typedef enum{
 
 
 typedef struct{
+    int id;
     STATUS status;
     PRIORITY priority;
-    int id;
     char *description;
     char *title;
-    char output_status[25];
-    char output_priority[25];
 }Tasks;
 
 
@@ -35,6 +33,7 @@ typedef struct{
     Tasks **task;
     int max_description_len;
     int max_title_len;
+    int id;
 }TaskList;
 
 TaskList *init_TaskList();

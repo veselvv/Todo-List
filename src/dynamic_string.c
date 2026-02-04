@@ -29,7 +29,7 @@ char *mgetline(){
     }
     int c;
     printf(">");
-    while ((c = getchar())!='\n'){
+    while ((c = getc(stdin))!='\n'){
         if(check_capacity_string(&string, &capacity, count+1)){
             string[count++] = (char)c;
         }else{

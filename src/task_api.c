@@ -14,19 +14,19 @@
 
 
 
-void set_output_priority(TaskList *task_list, int index){
+char  *set_output_priority(TaskList *task_list, int index){
     switch (task_list->task[index]->priority){
         case PRIORITY_LOW:
-            strcpy(task_list->task[index]->output_priority, "LOW");
+            return "LOW";
             break;
         case PRIORITY_MEDIUM:
-            strcpy(task_list->task[index]->output_priority, "MEDIUM");
+            return  "MEDIUM";
             break;
         case PRIORITY_HIGH:
-            strcpy(task_list->task[index]->output_priority, "HIGH");
+            return  "HIGH";
             break;
         case PRIORITY_CRITICAL:
-            strcpy(task_list->task[index]->output_priority, "CRITICAL");
+            return "CRITICAL";
             break;
         default: 
             break;
@@ -35,16 +35,16 @@ void set_output_priority(TaskList *task_list, int index){
 
 
 
-void set_output_status(TaskList *task_list, int index){
+char *set_output_status(TaskList *task_list, int index){
     switch (task_list->task[index]->status){
         case TODO:
-            strcpy(task_list->task[index]->output_status, "TODO");
+            return "TODO";
             break;
         case IN_PROCESS:
-            strcpy(task_list->task[index]->output_status, "IN PROCESS");
+            return "IN PROCESS";
             break;
         case DONE:
-            strcpy(task_list->task[index]->output_status, "DONE");
+            return "DONE";
             break;
         default: 
             break;
@@ -112,7 +112,6 @@ int change_status(TaskList *task_list){
     }
     if(flag){
         task_list->task[find_index]->status=(STATUS)choice_status;
-        set_output_status(task_list, find_index);
         return 1;
     }else{
         printf("Не найдена задача с таким Id\n");
@@ -159,7 +158,6 @@ int change_priority(TaskList *task_list){
     }
     if(flag){
         task_list->task[find_index]->priority=(PRIORITY)choice_priority;
-        set_output_priority(task_list, find_index);
         return 1;
     }else{
         printf("Не найдена задача с таким Id\n");
@@ -227,7 +225,6 @@ int change_description(TaskList *task_list){
 
 
 int append_task(TaskList *task_list){
-    static int id_var = 1;
     if(!task_list){
         perror("Err: ");
         return 0;
@@ -242,8 +239,8 @@ int append_task(TaskList *task_list){
         perror("Err: ");
         return 0;
     }
-    task_list->task[task_list->count]->id = id_var++;
-    printf("Выедите название задачи: \n");
+    task_list->task[task_list->count]->id = task_list->id++;
+    printf("Введите название задачи: \n");
     task_list->task[task_list->count]->title = mgetline();
     if(!task_list->task[task_list->count]->title){
         printf("Ошибка при создании имени\n");
@@ -267,8 +264,6 @@ int append_task(TaskList *task_list){
     scanf("%d", &temp);
     while (getchar() != '\n');
     task_list->task[task_list->count]->status = (STATUS)temp;
-    set_output_priority(task_list, task_list->count);
-    set_output_status(task_list, task_list->count);
     task_list->max_title_len = MAX(task_list->max_title_len, strlen(task_list->task[task_list->count]->title));
     if(MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description))>50){
             task_list->max_description_len = 50;

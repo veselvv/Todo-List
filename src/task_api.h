@@ -3,8 +3,8 @@
 #include "tasks.h"
 
 
-void set_output_priority(TaskList *task_list, int index);
-void set_output_status(TaskList *task_list, int index);
+char *set_output_priority(TaskList *task_list, int index);
+char *set_output_status(TaskList *task_list, int index);
 char *choice_color_status(TaskList *task_list, int index);
 char *choice_color_prioritet(TaskList *task_list, int index);
 int change_status(TaskList *task_list);

@@ -25,7 +25,7 @@ int init_tasks(TaskList *task_list){
         return 0;
     }
     task_list->task = malloc(sizeof(Tasks*)*task_list->capacity);
-
+    task_list->id=1;
     if(!task_list->task){
         perror("Could not init memmory for tsaks: ");
         return 0;
