@@ -1,6 +1,6 @@
 #ifndef TASKS_H
 #define TASKS_H
-
+#include <time.h>
 typedef enum{
     PRIORITY_LOW,
     PRIORITY_MEDIUM,
@@ -18,6 +18,8 @@ typedef enum{
 
 
 typedef struct{
+    time_t target_date;
+    time_t created_date;
     int id;
     STATUS status;
     PRIORITY priority;

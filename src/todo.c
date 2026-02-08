@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libpq-fe.h>
-
 #include<getopt.h>
 #include "tasks.h"
 #include "task_api.h"
@@ -110,21 +109,45 @@ void print_tasks_prog_cycle(){
 }
 
 
+void add_task_prog_cycle(){
+    TaskList *task_list=init_TaskList();
+    PGconn *conn = connection_to_database();
+    if(!conn){
+        perror("Err: ");
+        return;
+    }
+    if(!task_list){
+        perror("Err: ");
+        return;
+    };
+    printf("Загруженно %d задач из базы данных\n", load_tasks_from_database(task_list, conn));
+    (append_task(task_list));
+    save_tasks_to_database(task_list, conn);
+    free_TaskList(task_list);
+    PQfinish(conn);
+}
+
+
+
 int main(int argc, char *argv[]){
     if(argc==1){
         main_prog_cycle();
     }else if(argc>1){
         int opt;
-        while((opt = getopt(argc, argv,"lh"))!=-1){
+        while((opt = getopt(argc, argv,"lha"))!=-1){
             switch (opt)
             {
             case 'l':
                 print_tasks_prog_cycle();
                 break;
+            case 'a':
+                add_task_prog_cycle();
+                break;
             case 'h':
                 printf("Usage:\n"
                         "./todo - run task manager\n"
-                        "./todo -l - print todo list\n");
+                        "./todo -l - print todo list\n"
+                        "./todo -a - add task\n");
             case '?':
                 printf("Unknown option, try ./todo -h to get correct usage instruction\n");
             default:

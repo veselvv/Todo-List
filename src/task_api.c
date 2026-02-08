@@ -7,7 +7,34 @@
 #define MAX(a,b) a>b?a:b
 
 
-
+void set_expiry_date(TaskList *task_list,int index){
+    task_list->task[index]->created_date = time(NULL);
+    struct tm *expiry_date = malloc(sizeof(struct tm));
+    if(!expiry_date){
+        perror("Could not init: memmory");
+        return;
+    }
+    printf("Установите предельную дату для выполнения задачи\n"
+            "День(1-31)\t Месяц(1-12)\t Год(1900-2900)\n");
+    int day;
+    int month;
+    int year;
+    printf("День: ");
+    scanf("%d", &day);
+    printf("Месяц: ");
+    scanf("%d", &month);
+    printf("Год: ");
+    scanf("%d", &year);
+    expiry_date->tm_year = year-1900;
+    expiry_date->tm_mon = month-1;
+    expiry_date->tm_mday = day;
+    expiry_date->tm_hour=23;
+    expiry_date->tm_min=59;
+    expiry_date->tm_sec=59;
+    expiry_date->tm_isdst = -1; 
+    task_list->task[index]->target_date = mktime(expiry_date);
+    free(expiry_date);
+}
 
 
 
@@ -203,7 +230,7 @@ int change_description(TaskList *task_list){
             return 0;
         }
         if(MAX(task_list->max_description_len, strlen(task_list->task[find_index]->description))>50){
-            task_list->max_description_len = 50;
+            task_list->max_description_len = 40;
         }else{
             task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[find_index]->description));
         }
@@ -266,10 +293,11 @@ int append_task(TaskList *task_list){
     task_list->task[task_list->count]->status = (STATUS)temp;
     task_list->max_title_len = MAX(task_list->max_title_len, strlen(task_list->task[task_list->count]->title));
     if(MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description))>50){
-            task_list->max_description_len = 50;
-        }else{
-            task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description));
-        }
+        task_list->max_description_len = 40;
+    }else{
+        task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description));
+    }
+    set_expiry_date(task_list, task_list->count);
     task_list->count++;
     printf("Задача успешно добавлена!\n");
     return 1;

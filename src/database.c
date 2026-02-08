@@ -4,6 +4,7 @@
 #include <string.h>
 #include "tasks.h"
 #include "database.h"
+#include <time.h>
 
 
 
@@ -33,7 +34,7 @@ int load_tasks_from_database(TaskList *task_list, PGconn *conn){
             return 0;
         }
     }
-    const char *query = "SELECT task_id, task_status, task_priority, task_description, task_title FROM tasks ORDER BY task_id";
+    const char *query = "SELECT task_id, task_status, task_priority, task_description, task_title, task_deadline FROM tasks ORDER BY task_id";
     PGresult *res = PQexec(conn, query);
     if(PQresultStatus(res)!=PGRES_TUPLES_OK){
         fprintf(stderr, "Query err: %s\n", PQerrorMessage(conn));
@@ -55,10 +56,37 @@ int load_tasks_from_database(TaskList *task_list, PGconn *conn){
         char *task_priority = PQgetvalue(res,i,2);
         char *task_description = PQgetvalue(res,i,3);
         char *task_title = PQgetvalue(res,i,4);
+        char *task_deadline = PQgetvalue(res,i,5);
+        
+        int hour;
+        int year;
+        int month;
+        int day;
+        int min;
+        int sec;
+        sscanf(task_deadline,"%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&min,&sec);
+        struct tm *expiry_date = malloc(sizeof(struct tm));
+        if(!expiry_date){
+            perror("Could not init memmory: ");
+            PQclear(res);
+            free_TaskList(task_list);
+            return 0;
+
+        }
+        expiry_date->tm_hour=hour;
+        expiry_date->tm_mday=day;
+        expiry_date->tm_min=min;
+        expiry_date->tm_mon=month-1;
+        expiry_date->tm_year=year-1900;
+        expiry_date->tm_sec=sec;
+        expiry_date->tm_isdst = -1; 
+
         task_list->task[task_list->count]->id = atoi(task_id);
         task_list->task[task_list->count]->status = (STATUS)atoi(task_status);
         task_list->task[task_list->count]->priority = (PRIORITY)atoi(task_priority);
         task_list->task[task_list->count]->description = malloc(sizeof(char)*strlen(task_description)+1);
+        task_list->task[task_list->count]->target_date = mktime(expiry_date);
+
         if(!task_list->task[task_list->count]->description){
             perror("Could not init memmory: ");
             PQclear(res);
@@ -77,12 +105,13 @@ int load_tasks_from_database(TaskList *task_list, PGconn *conn){
         strncpy(task_list->task[task_list->count]->title,  task_title, strlen(task_title)+1);
         task_list->max_title_len = MAX(task_list->max_title_len, strlen(task_list->task[task_list->count]->title));
         if(MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description))>50){
-            task_list->max_description_len = 50;
+            task_list->max_description_len = 40;
         }else{
             task_list->max_description_len = MAX(task_list->max_description_len, strlen(task_list->task[task_list->count]->description));
         }
         task_list->count++;
         task_list->id++;
+        free(expiry_date);
     }
     PQclear(res);
     return task_list->count;
@@ -154,23 +183,43 @@ int save_tasks_to_database(TaskList *task_list, PGconn *conn) {
                               strlen(task->description), NULL);
         }
         
-        // Формируем SQL запрос
+        // 4. Форматируем дату выполнения
+        char deadline_str[64] = "NULL";  // По умолчанию NULL
+        if (task->target_date != 0 && task->target_date != (time_t)-1) {
+            // Преобразуем time_t в struct tm
+            struct tm *timeinfo = localtime(&task->target_date);
+            if (timeinfo) {
+                // Формат: 'YYYY-MM-DD HH:MM:SS' (стандарт PostgreSQL)
+                strftime(deadline_str, sizeof(deadline_str), 
+                        "'%Y-%m-%d %H:%M:%S'", timeinfo);
+                
+                // Альтернативно, если ваш формат ДД-ММ-ГГГГ:
+                // strftime(deadline_str, sizeof(deadline_str), 
+                //         "'%d-%m-%Y %H:%M:%S'", timeinfo);
+            }
+        }
+        
+        // 5. Формируем SQL запрос с датой
         char query[4096];
         if (escaped_desc) {
             snprintf(query, sizeof(query),
-                "INSERT INTO tasks (task_status, task_priority, task_description, task_title) "
-                "VALUES (%d, %d, '%s', '%s')",
+                "INSERT INTO tasks (task_status, task_priority, "
+                "task_description, task_title, task_deadline) "
+                "VALUES (%d, %d, '%s', '%s', %s)",
                 task->status,
                 task->priority,
                 escaped_desc,
-                escaped_title);
+                escaped_title,
+                deadline_str);
         } else {
             snprintf(query, sizeof(query),
-                "INSERT INTO tasks (task_status, task_priority, task_title) "
-                "VALUES (%d, %d, '%s')",
+                "INSERT INTO tasks (task_status, task_priority, "
+                "task_title, task_deadline) "
+                "VALUES (%d, %d, '%s', %s)",
                 task->status,
                 task->priority,
-                escaped_title);
+                escaped_title,
+                deadline_str);
         }
         
         // Выполняем запрос
@@ -192,7 +241,7 @@ int save_tasks_to_database(TaskList *task_list, PGconn *conn) {
         saved_count++;
     }
     
-    // 4. Завершаем транзакцию
+    // 6. Завершаем транзакцию
     res = PQexec(conn, "COMMIT");
     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
         fprintf(stderr, "Ошибка завершения транзакции: %s\n", PQerrorMessage(conn));

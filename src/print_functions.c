@@ -2,7 +2,7 @@
 #include "task_api.h"
 #include <stdio.h>
 #include <string.h>
-
+#include<time.h>
 void print_task_list(TaskList *task_list){
     char *priority_color;
     char *status_color;
@@ -18,12 +18,15 @@ void print_task_list(TaskList *task_list){
     printf("┬");
     for(int i=0; i<15+2; i++) printf("─");
     printf("┬");
+    for(int i=0; i<25+2; i++) printf("─");
+    printf("┬");
     for(int i = 0;i<task_list->max_description_len+2; i++) printf("─");
     printf("┐\n");
     printf("│%5s│", "id");
     printf("%*s│", task_list->max_title_len+2, "title");
     printf("%17s│","Status");
     printf("%17s│", "Prioritet");
+    printf("%27s|", "Deadline");
     printf("%*s│\n", task_list->max_description_len+2, "Description");
     printf("├─────┼");
     for(int i = 0;i<task_list->max_title_len+2; i++) printf("─");
@@ -31,6 +34,8 @@ void print_task_list(TaskList *task_list){
     for(int i=0; i<15+2; i++) printf("─");
     printf("┼");
     for(int i=0; i<15+2; i++) printf("─");
+    printf("┼");
+    for(int i=0; i<25+2; i++) printf("─");
     printf("┼");
     for(int i = 0;i<task_list->max_description_len+2; i++) printf("─");
     printf("┤\n");
@@ -41,8 +46,11 @@ void print_task_list(TaskList *task_list){
             status_color = choice_color_status(task_list, i);
             buffer_priority = set_output_priority(task_list,i);
             buffer_status = set_output_status(task_list, i);
-            printf("│%5d│%*s│%s%17s%s│%s%17s%s│",task_list->task[i]->id,task_list->max_title_len+2,task_list->task[i]->title,status_color,buffer_status,reset,priority_color,buffer_priority,reset);
-            if(strlen(task_list->task[i]->description)<50){
+            struct tm *expiry_time = localtime(&task_list->task[i]->target_date);
+            char buffer_deadline[27];
+            sprintf(buffer_deadline, "%d-%d-%d %d:%d:%d",expiry_time->tm_year+1900,expiry_time->tm_mon+1,expiry_time->tm_mday, expiry_time->tm_hour, expiry_time->tm_min,expiry_time->tm_sec);
+            printf("│%5d│%*s│%s%17s%s│%s%17s%s│%27s|",task_list->task[i]->id,task_list->max_title_len+2,task_list->task[i]->title,status_color,buffer_status,reset,priority_color,buffer_priority,reset,buffer_deadline);
+            if(strlen(task_list->task[i]->description)<40){
                 printf("%*s│\n",task_list->max_description_len+2,task_list->task[i]->description);
                 if(i!=task_list->count-1){
                     printf("├─────┼");
@@ -52,6 +60,8 @@ void print_task_list(TaskList *task_list){
                     printf("┼");
                     for(int i=0; i<15+2; i++) printf("─");
                     printf("┼");
+                     for(int i=0; i<25+2; i++) printf("─");
+                    printf("┼");
                     for(int i = 0;i<task_list->max_description_len+2; i++) printf("─");
                     printf("┤\n");
                 }
@@ -60,9 +70,9 @@ void print_task_list(TaskList *task_list){
             }
             char *ptr = task_list->task[i]->description;
             int temp = strlen(ptr);
-            for(int j = 0; j<=strlen(task_list->task[i]->description)/52 ;j++){
+            for(int j = 0; j<=strlen(task_list->task[i]->description)/42 ;j++){
                 if(j==0){
-                    for(int k = 0;k<52;k++){
+                    for(int k = 0;k<42;k++){
                         if(*ptr!='\n'&&*ptr!='\0'){
                             printf("%c", *ptr++);
 
@@ -73,21 +83,21 @@ void print_task_list(TaskList *task_list){
                     count=0;
                 }
                 else{
-                    printf("│%5s│%*s│%17s│%17s│","",task_list->max_title_len+2,"","","");
-                    for(int k = 0;k<52;k++){
+                    printf("│%5s│%*s│%17s│%17s│%27s|","",task_list->max_title_len+2,"","","","");
+                    for(int k = 0;k<42;k++){
                         if(*ptr!='\n'&&*ptr!='\0'){
                             printf("%c", *ptr++);
                             count++;
                         }
                     }
-                    if(j<strlen(task_list->task[i]->description)/52){
+                    if(j<strlen(task_list->task[i]->description)/42){
                         printf("│\n");
                         count =0;
                     }
                 }
             }
 
-            printf("%*s│\n", 52-count, "");
+            printf("%*s│\n", 42-count, "");
         }
         if(i!=task_list->count-1){
             printf("├─────┼");
@@ -96,6 +106,8 @@ void print_task_list(TaskList *task_list){
             for(int i=0; i<15+2; i++) printf("─");
             printf("┼");
             for(int i=0; i<15+2; i++) printf("─");
+            printf("┼");
+            for(int i=0; i<25+2; i++) printf("─");
             printf("┼");
             for(int i = 0;i<task_list->max_description_len+2; i++) printf("─");
             printf("┤\n");
@@ -109,6 +121,8 @@ void print_task_list(TaskList *task_list){
     for(int i=0; i<15+2; i++) printf("─");
     printf("┴");
     for(int i=0; i<15+2; i++) printf("─");
+    printf("┴");
+    for(int i=0; i<25+2; i++) printf("─");
     printf("┴");
     for(int i = 0;i<task_list->max_description_len+2; i++) printf("─");
     printf("┘\n");
