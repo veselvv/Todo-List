@@ -19,10 +19,9 @@ docker run -d \
   --name postgres_db \
   -p 5433:5432 \
   postgres:15
-
+sleep 3
 # 2. Ожидание готовности PostgreSQL
 echo -e "${YELLOW}⏳ Ожидание готовности PostgreSQL...${NC}"
-sleep 3
 
 # Проверка, что контейнер запустился
 if ! docker ps | grep -q postgres_db; then
@@ -33,6 +32,7 @@ fi
 # 3. Создание базы данных tasks
 echo -e "${GREEN}📋 Создание базы данных 'tasks'...${NC}"
 docker exec postgres_db psql -U postgres -d users -c "CREATE DATABASE tasks;" 2>/dev/null
+sleep 3
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ База данных 'tasks' создана${NC}"
 else
@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     task_deadline TIMESTAMP
 );
 "
+sleep 2
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Таблица tasks создана${NC}"
 else
