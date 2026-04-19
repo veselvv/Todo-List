@@ -1,5 +1,6 @@
 #!/bin/bash
 mkdir build
+make
 # Цвета для вывода
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
